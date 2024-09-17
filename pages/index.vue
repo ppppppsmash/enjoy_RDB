@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useConverter } from '~/composables/useConverter'
 
 const { sqlToPrisma, prismaToSql } = useConverter()
@@ -7,6 +6,7 @@ const { sqlToPrisma, prismaToSql } = useConverter()
 const input = ref('')
 const output = ref('')
 const conversionType = ref('sqlToPrisma')
+const selectedQuery = ref('')
 
 async function convert() {
   try {
@@ -25,6 +25,25 @@ function clearInput() {
   input.value = ''
   output.value = ''
 }
+
+function selectQuery() {
+  if (selectedQuery.value) {
+    input.value = selectedQuery.value
+  }
+}
+
+const commonQueries = {
+  sqlToPrisma: [
+    { label: 'ユーザーテーブル', value: 'CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), created_at TIMESTAMP);' },
+    { label: '商品テーブル', value: 'CREATE TABLE products (id INT PRIMARY KEY, name VARCHAR(255), price DECIMAL(10,2), stock INT, category VARCHAR(100));' },
+    // 他のよく使われるSQLクエリを追加
+  ],
+  prismaToSql: [
+    { label: 'ユーザーモデル', value: 'model User {\n  id    Int     @id @default(autoincrement())\n  name  String\n  email String  @unique\n  posts Post[]\n}' },
+    { label: '商品モデル', value: 'model Product {\n  id       Int      @id @default(autoincrement())\n  name     String\n  price    Decimal\n  category String?\n}' },
+    // 他のよく使われるPrismaモデルを追加
+  ]
+}
 </script>
 
 <template>
@@ -37,6 +56,14 @@ function clearInput() {
       <label>
         <input type="radio" v-model="conversionType" value="prismaToSql"> Prisma → SQL
       </label>
+    </div>
+    <div class="mb-4">
+      <select v-model="selectedQuery" @change="selectQuery" class="w-full p-2 border rounded">
+        <option value="">カスタムクエリを入力</option>
+        <option v-for="query in commonQueries[conversionType]" :key="query.label" :value="query.value">
+          {{ query.label }}
+        </option>
+      </select>
     </div>
     <div class="grid grid-cols-2 gap-4">
       <div>
